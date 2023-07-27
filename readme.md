@@ -1,4 +1,4 @@
-# 步骤
+# 基于<a href="https://github.com/Mrs4s/go-cqhttp">go-cqhttp</a>的qq chatgpt bot实现
 
 ### 1. 安装 Python
 
