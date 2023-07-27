@@ -1,34 +1,18 @@
-import json
-import os
-import traceback
-import uuid
+import json, traceback, openai, requests, tiktoken, math, random, re
 from copy import deepcopy
 from flask import request, Flask
-import openai
-import requests
-from text_to_image import text_to_image
-from datetime import datetime
-from datetime import timedelta
-from datetime import timezone
-import tiktoken
-import asyncio
-from new_bing import chat_whit_nb, reset_nb_session
-from stable_diffusion import get_stable_diffusion_img
+from datetime import datetime, timedelta, timezone
 from config_file import config_data
-from img2prompt import img_to_prompt
-import re
-import random
 from credit_summary import get_credit_summary_by_index
 
+
 qq_no = config_data['qq_bot']['qq_no']
-admin_qq = config_data['qq_bot']['admin_qq']
+admin_qq = config_data["qq_bot"]["admin_qq"]
 
 session_config = {
     'msg': [
         {"role": "system", "content": config_data['chatgpt']['preset']}
-    ],
-    'send_voice': False,
-    'new_bing': False
+    ]
 }
 
 sessions = {}
@@ -75,59 +59,12 @@ def get_message():
             print('开始直接生成图像')
             pic_path = get_openai_image(message)
             send_private_message_image(uid, pic_path, '')
-        elif message.strip().startswith('/sd'):
-            print("开始stable-diffusion生成")
-            pic_url = ""
-            try:
-                pic_url = sd_img(message.replace("/sd", "").strip())
-            except Exception as e:
-                print("stable-diffusion 接口报错: " + str(e))
-                send_private_message(uid, "Stable Diffusion 接口报错: " + str(e), False)
-            print("stable-diffusion 生成图像: " + pic_url)
-            send_private_message_image(uid, pic_url, '')
-            """ 
         elif message.strip().startswith('[CQ:image'):
-            print("开始分析图像")
-            # 定义正则表达式
-            pattern = r'url=([^ ]+)'
-            # 使用正则表达式查找匹配的字符串
-            match = re.search(pattern, message.strip())
-            prompt = img_to_prompt(match.group(1))
-            send_private_message(uid, prompt, False)  # 将消息返回的内容发送给用户 """
-        elif message.strip().startswith('[CQ:image'):
-            print("收到图像")
-            send_private_message(uid,"暂时无法对图像进行处理",False)                
-        elif message.strip().startswith('[CQ:json'):
-            print("收到json")
-            send_private_message(uid,"暂时无法对此类型消息进行处理",False)
-        elif message.strip().startswith('开发者'):
-            print('用户意见:')
-            print(message)
-            msg_distext = str(message).replace('开发者',(str(uid)+str(sender)))
-            send_private_message(admin_qq, msg_distext,False)
-            send_private_message(uid,"已发送",False)     
-        elif message.startswith('/q'):
-            msg_list = message.split(' ')
-            if len(msg_list) > 1:
-                qq_id = msg_list[0][2:]
-                msg_sendtext = ' '.join(msg_list[1:])
-                send_private_message(qq_id, f'消息来自 {sender} 说：{msg_sendtext}', False)
-                send_private_message(uid,"已发送",False)
-                print(f'已向 {qq_id} 发送消息：{msg_sendtext}')
-            else:
-                print('消息不合法')    
-            """         
-        elif request.get_json().get("sub_type") == "poke":
-            tid = ["target_id"]
-            if str(tid) == "3388652305":
-            send_private_message(uid, "别戳我啦"|"干什么",False)  """
+            send_private_message(uid, '暂不支持图片消息', False)
         else:
             # 获得对话session
             session = get_chat_session('P' + str(uid))
-            if session['new_bing']:
-                msg_text = chat_nb(message, session)  # 将消息转发给new bing 处理
-            else:
-                msg_text = chat(message, session)  # 将消息转发给ChatGPT处理
+            msg_text = chat(message, session)  # 将消息转发给ChatGPT处理
             send_private_message(uid, msg_text, session['send_voice'])  # 将消息返回的内容发送给用户
 
     if request.get_json().get('message_type') == 'group':  # 如果是群消息
@@ -153,62 +90,12 @@ def get_message():
                 print('开始直接生成图像')
                 pic_path = get_openai_image(message)
                 send_group_message_image(gid, pic_path, uid, '')
-                """   
-            elif message.strip().startswith('[CQ:image'):
-                print("开始分析图像")
-                # 定义正则表达式
-                pattern = r'url=([^ ]+)'
-                # 使用正则表达式查找匹配的字符串
-                match = re.search(pattern, message.strip())
-                prompt = img_to_prompt(match.group(1))
-                send_group_message(gid, prompt,uid, False)  """               
-            elif message.strip().startswith('[CQ:image'):
-                print("收到图像")
-                send_group_message(gid,"暂时无法对图像进行处理",uid, False)                
-            elif message.strip().startswith('[CQ:video'):
-                print("收到视频")
-                send_group_message(gid,"暂时无法对视频进行处理",uid, False)
-            elif message.strip().startswith('[CQ:json'):
-                print("收到json")
-                send_group_message(gid,"暂时无法对此类型消息进行处理",uid, False)    
-                """ 
-            elif message.strip().startswith('[CQ:image'):
-                print('收到图像')
-                # 定义正则表达式
-                pattern = r'url=([^ ]+)'
-                # 使用正则表达式查找匹配的字符串
-                pic_url = re.search(pattern, message.strip())
-                if pic_url:
-                    pic_url_str = str(pic_url.group())
-                    pic_url_str = pic_url_str.replace(']', '')
-                    # 发送图片消息
-                    send_group_message_image(gid, pic_url_str, uid, '')
-                else:
-                    print('未能解析出图片url')  """       
-            elif message.strip().startswith('开发者'):
-                print('用户意见:')
-                print(message)
-                msg_distext = str(message).replace('开发者',(str(uid)+str(sender)))
-                send_private_message(admin_qq, msg_distext,False)  
-                send_private_message(uid,"已发送",False)             
-            elif message.strip().startswith('/sd'):
-                print("开始stable-diffusion生成")
-                try:
-                    pic_url = sd_img(message.replace("/sd", "").strip())
-                except Exception as e:
-                    print("stable-diffusion 接口报错: " + str(e))
-                    send_group_message(gid, "Stable Diffusion 接口报错: " + str(e), uid, False)
-                print("stable-diffusion 生成图像: " + pic_url)
-                send_group_message_image(gid, pic_url, uid, '')
             else:
                 # 下面你可以执行更多逻辑，这里只演示与ChatGPT对话
                 # 获得对话session
                 session = get_chat_session('G' + str(gid))
-                if session['new_bing']:
-                    msg_text = chat_nb(message, session)  # 将消息转发给new bing处理
-                else:
-                    msg_text = chat(message, session)  # 将消息转发给ChatGPT处理
-                send_group_message(gid, msg_text, uid, session['send_voice'])  # 将消息转发到群里
+                msg_text = chat(message, session)  # 将消息转发给ChatGPT处理
+                send_group_message(gid, msg_text, uid)  # 将消息转发到群里
 
     if request.get_json().get('post_type') == 'request':  # 收到请求消息
         print("收到请求消息")
@@ -292,46 +179,11 @@ def reset_chat():
     return json.dumps(resu, ensure_ascii=False)
 
 
-# 与new bing交互
-def chat_nb(msg, session):
-    try:
-        if msg.strip() == '':
-            return '您好，我是人工智能助手，如果您有任何问题，请随时告诉我，我将尽力回答。\n如果您需要重置我们的会话，请回复`重置会话`'
-        if '语音开启' == msg.strip():
-            session['send_voice'] = True
-            return '语音回复已开启'
-        if '语音关闭' == msg.strip():
-            session['send_voice'] = False
-            return '语音回复已关闭'
-        if '重置会话' == msg.strip():
-            reset_nb_session(session['id'])
-            return '会话已重置'
-        if '指令说明' == msg.strip():
-            return "指令如下(群内需@机器人)：\n1.[重置会话] 请发送 重置会话\n2.[设置人格] 请发送 设置人格+人格描述\n3.[重置人格] 请发送 重置人格\n4.[指令说明] 请发送 " \
-                   "指令说明\n注意：\n重置会话不会清空人格,重置人格会重置会话!\n设置人格后人格将一直存在，除非重置人格或重启逻辑端!"
-        if "/gpt" == msg.strip():
-            session['new_bing'] = False
-            return '已切换至ChatGPT'
-        print("问: " + msg)
-        replay = asyncio.run(chat_whit_nb(session['id'], msg))
-        print("New Bing 返回: " + replay)
-        return replay
-    except Exception as e:
-        traceback.print_exc()
-        return str('异常: ' + str(e))
-
-
 # 与ChatGPT交互的方法
 def chat(msg, session):
     try:
         if msg.strip() == '':
-            return '您好，我是yumi，如果您有任何问题，请随时告诉我，我将尽力回答喵\n如果您需要重置我们的会话，请回复`重置会话`'
-        if '语音开启' == msg.strip():
-            session['send_voice'] = True
-            return '语音回复已开启'
-        if '语音关闭' == msg.strip():
-            session['send_voice'] = False
-            return '语音回复已关闭'
+            return '您好，我是人工智能助手，如果您有任何问题，请随时告诉我，我将尽力回答。\n如果您需要重置我们的会话，请回复`重置会话`'
         if '重置会话' == msg.strip():
             # 清除对话内容但保留人设
             del session['msg'][1:len(session['msg'])]
@@ -342,17 +194,14 @@ def chat(msg, session):
                 {"role": "system", "content": config_data['chatgpt']['preset']}
             ]
             return '人格已重置'
-        if '开发者' == msg.strip():
-            return "已经发送给yc啦 还有什么要说的喵"
         if '查询余额' == msg.strip():
             text = ""
             for i in range(len(config_data['openai']['api_key'])):
                 text = text + str(get_credit_summary_by_index(i)) + "\n"
             return text
         if '指令说明' == msg.strip():
-            return "正常使用gpt直接对话即可 指令如下\n1.重置会话(使用指令后第一个回复会变成英文)\n2.设置人格 从现在起你是xxxx\n3.重置人格\n4.指令说明(暂时停用)\n5.生成图像 xxxxx(OpenAI接口 生成格式为图片描述➕图片)\n6.直接生成图像 xxxx(OpenAI接口 直接生成图片，速度比5快)\n7./sd +英文描述(Stable Diffusion AI绘画接口 生成图像质量高)\n8./img (费用太高 已关闭)\n9.开发者 xxxxx 转述信息给我\n10./q1181806270 xxxx 发送xxxx给1181806270\n11.点歌(开发中)\n12.戳一戳反馈(开发中)\n13.图片识别(耗量太高 已关闭)\n"
-        if '你好' == msg.strip():
-            return "你好喵\n　／l、\n（ﾟ､ 。 ７\n　l、 ~ヽ\n　じしf_, )ノ​" 
+            return "指令如下(群内需@机器人)：\n1.[重置会话] 请发送 重置会话\n2.[设置人格] 请发送 设置人格+人格描述\n3.[重置人格] 请发送 重置人格\n4.[指令说明] 请发送 " \
+                   "指令说明\n注意：\n重置会话不会清空人格,重置人格会重置会话!\n设置人格后人格将一直存在，除非重置人格或重启逻辑端!"
         if msg.strip().startswith('/img'):
             msg = str(msg).replace('/img', '')
             print('开始直接生成图像')
@@ -364,9 +213,6 @@ def chat(msg, session):
                 {"role": "system", "content": msg.strip().replace('设置人格', '')}
             ]
             return '人格设置成功'
-        if "/newbing" == msg.strip():
-            session['new_bing'] = True
-            return '已切换至New Bing'
         # 设置本次对话内容
         session['msg'].append({"role": "user", "content": msg})
         # 设置时间
@@ -425,9 +271,30 @@ def chat_with_gpt(messages):
 
         resp = openai.ChatCompletion.create(
             model=config_data['chatgpt']['model'],
-            messages=messages
+            messages=messages,
+            functions=my_functions
         )
-        resp = resp['choices'][0]['message']['content']
+        if "stop" == resp['choices'][0]['finish_reason']:
+            resp = resp['choices'][0]['message']['content']
+        elif "function_call" == resp['choices'][0]['finish_reason']:
+            fun_name = resp['choices'][0]['message']['function_call']['name']
+            param = resp['choices'][0]['message']['function_call']['arguments']
+            # 如果你有自己的函数，可以接着写
+            if "search_internet" == fun_name:
+                query = json.loads(param)
+                print("GPT请求调用搜索函数,搜索参数:")
+                print(query)
+                search_res = search_internet(query)
+                print("互联网搜索结果:")
+                print(search_res)
+                # 函数返回结果交给gpt
+                messages.append({"role": "function", "name": fun_name, "content": search_res['data']})
+                # 重新与gpt交互
+                return chat_with_gpt(messages)
+            else:
+                resp = "未知函数"
+        else:
+            resp = "未知错误"
     except openai.OpenAIError as e:
         if str(e).__contains__("Rate limit reached for default-gpt-3.5-turbo") and current_key_index <= max_length:
             # 切换key
@@ -450,34 +317,36 @@ def chat_with_gpt(messages):
     return resp
 
 
-# 生成图片
-def genImg(message):
-    img = text_to_image(message)
-    filename = str(uuid.uuid1()) + ".png"
-    filepath = config_data['qq_bot']['image_path'] + str(os.path.sep) + filename
-    img.save(filepath)
-    print("图片生成完毕: " + filepath)
-    return filename
-
-
-# 发送私聊消息方法 uid为qq号，message为消息内容
-def send_private_message(uid, message, send_voice):
+def send_private_message(uid, message):
     try:
-        if len(message) >= config_data['qq_bot']['max_length'] and not send_voice:  # 如果消息长度超过限制，转成图片发送
-            pic_path = genImg(message)
-            message = "[CQ:image,file=" + pic_path + "]"
-        res = requests.post(url=config_data['qq_bot']['cqhttp_url'] + "/send_private_msg",
-                            params={'user_id': int(uid), 'message': message}).json()
-        if res["status"] == "ok":
-            print("私聊消息发送成功")
+        max_length = config_data["qq_bot"]["max_length"]
+        if len(message) > max_length:  # 如果消息长度超过限制，切成多条消息发送
+            num_messages = math.ceil(len(message) / max_length)  # 计算需要发送的消息数量
+            for i in range(num_messages):
+                start_index = i * max_length
+                end_index = start_index + max_length
+                current_message = message[start_index:end_index]
+                res = requests.post(
+                    url=config_data["qq_bot"]["cqhttp_url"] + "/send_private_msg",
+                    params={"user_id": int(uid), "message": current_message},
+                ).json()
+                if res["status"] == "ok":
+                    print("第", i + 1, "条私聊消息发送成功")
+                else:
+                    print(res)
+                    print("第", i + 1, "条私聊消息发送失败，错误信息：" + str(res["wording"]))
         else:
-            print(res)
-            print("私聊消息发送失败，错误信息：" + str(res['wording']))
-
+            res = requests.post(
+                url=config_data["qq_bot"]["cqhttp_url"] + "/send_private_msg",
+                params={"user_id": int(uid), "message": message},
+            ).json()
+            if res["status"] == "ok":
+                print("私聊消息发送成功")
+            else:
+                print(res)
+                print("私聊消息发送失败，错误信息：" + str(res["wording"]))
     except Exception as error:
         print("私聊消息发送失败")
-        print(error)
-
 
 # 发送私聊消息方法 uid为qq号，pic_path为图片地址
 def send_private_message_image(uid, pic_path, msg):
@@ -498,24 +367,41 @@ def send_private_message_image(uid, pic_path, msg):
         print(error)
 
 
+
 # 发送群消息方法
-def send_group_message(gid, message, uid, send_voice):
+def send_group_message(gid, message, uid):
     try:
-        if len(message) >= config_data['qq_bot']['max_length'] and not send_voice:  # 如果消息长度超过限制，转成图片发送
-            pic_path = genImg(message)
-            message = "[CQ:image,file=" + pic_path + "]"
-        if not send_voice:
-            message = str('[CQ:at,qq=%s]\n' % uid) + message  # @发言人
-        res = requests.post(url=config_data['qq_bot']['cqhttp_url'] + "/send_group_msg",
-                            params={'group_id': int(gid), 'message': message}).json()
-        if res["status"] == "ok":
-            print("群消息发送成功")
+        max_length = config_data["qq_bot"]["max_length"]
+        if len(message) > max_length:  # 如果消息长度超过限制，切成多条消息发送
+            num_messages = math.ceil(len(message) / max_length)  # 计算需要发送的消息数量
+            for i in range(num_messages):
+                start_index = i * max_length
+                end_index = start_index + max_length
+                current_message = message[start_index:end_index]
+                current_message = str("[CQ:at,qq=%s]\n" % uid) + current_message  # @发言人
+                res = requests.post(
+                    url=config_data["qq_bot"]["cqhttp_url"] + "/send_group_msg",
+                    params={"group_id": int(gid), "message": current_message},
+                ).json()
+                if res["status"] == "ok":
+                    print("第", i + 1, "条群消息发送成功")
+                else:
+                    print(res)
+                    print("第", i + 1, "条群消息发送失败，错误信息：" + str(res["wording"]))
         else:
-            print("群消息发送失败，错误信息：" + str(res['wording']))
+            message = str("[CQ:at,qq=%s]\n" % uid) + message  # @发言人
+            res = requests.post(
+                url=config_data["qq_bot"]["cqhttp_url"] + "/send_group_msg",
+                params={"group_id": int(gid), "message": message},
+            ).json()
+            if res["status"] == "ok":
+                print("群消息发送成功")
+            else:
+                print(res)
+                print("群消息发送失败，错误信息：" + str(res["wording"]))
     except Exception as error:
         print("群消息发送失败")
         print(error)
-
 
 # 发送群消息图片方法
 def send_group_message_image(gid, pic_path, uid, msg):
@@ -597,19 +483,28 @@ def num_tokens_from_messages(messages, model="gpt-3.5-turbo"):
         raise NotImplementedError(f"""当前模型不支持tokens计算: {model}.""")
 
 
-# sd生成图片,这里只做了正向提示词，其他参数自己加
-def sd_img(msg):
-    res = get_stable_diffusion_img({
-        "prompt": msg,
-        "width": 768,
-        "height": 512,
-        "num_inference_steps": 20,
-        "guidance_scale": 7.5,
-        "negative_prompt": "",
-        "scheduler": "EulerAncestralDiscrete",
-        "seed": random.randint(1, 9999999),
-    }, config_data['replicate']['api_token'])
-    return res[0]
+my_functions = [
+    {
+        "name": "search_internet",
+        "description": "通过互联网搜索信息的方法",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "query": {
+                    "type": "string",
+                    "description": "搜索关键词",
+                }
+            },
+            "required": ["query"],
+        },
+    }
+]
+
+
+# 搜索互联网
+def search_internet(query):
+    res = requests.post(url="https://duck.lucent.blog/search", json=query).json()
+    return res
 
 
 if __name__ == '__main__':
