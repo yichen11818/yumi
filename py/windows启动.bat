@@ -1,2 +1,0 @@
-py Qbot.py
-pause
