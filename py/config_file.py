@@ -1,7 +1,7 @@
 import json
 
 
-with open("py\config.json", "r",
+with open("config.json", "r",
           encoding='utf-8') as jsonfile:
     config_data = json.load(jsonfile)
 
