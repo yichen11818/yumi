@@ -26,7 +26,7 @@ YuMi 是一个基于 Flask 的 QQ 机器人服务端框架,提供了丰富的功
   - Replicate API
 
 ## 项目结构
-
+```
 src/
 ├── main.py # 应用入口
 ├── handlers/ # 事件处理器
@@ -41,7 +41,7 @@ src/
 └── utils/ # 工具类
 ├── config.py
 └── logger.py
-
+```
 
 ## 快速开始
 
