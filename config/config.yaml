@@ -1,0 +1,47 @@
+qq_bot:
+  cqhttp_url: "http://127.0.0.1:8600"
+  bot_uid: "你的机器人QQ号"
+  admin_qq: "管理员QQ号"
+  host: "127.0.0.1"
+  port: 5555
+  max_length: 4500
+  auto_confirm: false
+  model: "yumi"
+  model_show: "yumi"
+
+openai:
+  api_key: 
+    - "你的OpenAI API Key"
+  vip_base_url: "https://api.openai.com/v1"
+  img_size: "1024x1024"
+
+chatgpt:
+  model: "gpt-3.5-turbo-0613"
+  max_tokens: 4000
+  preset: "你是一个智能助手..."
+  functions_enabled: true
+
+baidu:
+  appid: "你的百度翻译APPID"
+  secret_key: "你的百度翻译密钥"
+
+
+replicate:
+  api_token: "你的Replicate API Token"
+
+electricity:
+  api_url: "电费查询API地址"
+  api_key: "电费查询API密钥"
+
+news:
+  gid:
+    cs2: "CS2新闻推送群号,多个群用逗号分隔"
+    gpt: "GPT新闻推送群号,多个群用逗号分隔"
+
+database:
+  path: "data/bot.db"
+
+google:
+  api_key: "你的Google API密钥"
+  cx_id: "你的自定义搜索引擎ID"
+  serper_api_key: "d682aec0b12a7466cdd039ce380deb69d4cffdea"

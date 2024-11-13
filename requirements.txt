@@ -1,0 +1,14 @@
+creart
+flask
+openai
+Pillow
+requests
+tiktoken
+edge_tts
+asyncio
+beautifulsoup4
+EdgeGPT
+replicate
+psutil
+fake_useragent
+APScheduler
