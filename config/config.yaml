@@ -49,4 +49,4 @@ database:
 google:
   api_key: "你的Google API密钥" # Google API密钥
   cx_id: "你的自定义搜索引擎ID" # 自定义搜索引擎ID
-  serper_api_key: "d682aec0b12a7466cdd039ce380deb69d4cffdea" # Serper API密钥
+  serper_api_key: "你的Serper API密钥" # Serper API密钥
