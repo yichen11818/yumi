@@ -1,3 +1,7 @@
+import sys
+from pathlib import Path
+sys.path.append(str(Path(__file__).parent.parent))
+
 import requests
 from typing import Optional, Dict, Any, List, Union
 from utils.config import Config
@@ -57,10 +61,6 @@ class QQService:
             }
         }
 
-    def build_message(self, elements: List[Dict[str, Any]]) -> str:
-        """将消息元素列表转换为JSON字符串"""
-        return json.dumps(elements)
-
     def send_message(
         self,
         gid: Optional[int] = None,
@@ -68,7 +68,6 @@ class QQService:
         uid: Optional[int] = None,
         at: bool = True
     ) -> bool:
-        """发送消息到群或私聊"""
         try:
             if message is None:
                 raise ValueError("Message cannot be None")
@@ -81,29 +80,33 @@ class QQService:
             if gid is not None and at and uid:
                 message.insert(0, self.at(uid))
                 
-            # 转换为JSON字符串
-            message_str = self.build_message(message)
+            # 详细的发送日志
+            target = f"群{gid}" if gid else f"用户{uid}"
+            self.logger.info(
+                f"\n发送消息到{target}:"
+                f"\n- 内容: {message}"
+            )
             
             if gid is not None:
                 url = f"{self.base_url}/send_group_msg"
-                data = {"group_id": gid, "message": message_str}
+                data = {"group_id": gid, "message": message, "auto_escape": False}
             else:
                 url = f"{self.base_url}/send_private_msg"
-                data = {"user_id": uid, "message": message_str}
+                data = {"user_id": uid, "message": message, "auto_escape": False}
                 
             response = self.session.post(url, json=data)
             response.raise_for_status()
             result = response.json()
             
             if result['status'] == 'ok':
-                self.logger.info(f"Message sent successfully: {message_str[:100]}...")
+                self.logger.info("消息发送成功")
                 return True
             else:
-                self.logger.error(f"Failed to send message: {result.get('wording', 'Unknown error')}")
+                self.logger.error(f"消息发送失败: {result.get('wording', 'Unknown error')}")
                 return False
                 
         except Exception as e:
-            self.logger.error(f"Error sending message: {e}")
+            self.logger.error(f"发送消息异常: {e}")
             return False
             
     def get_user_info(self, uid: int) -> Optional[Dict[str, Any]]:

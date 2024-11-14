@@ -2,6 +2,7 @@ import yaml
 import os
 from typing import Dict, Any
 from pathlib import Path
+from ruamel.yaml import YAML
 
 class Config:
     _instance = None
@@ -119,8 +120,17 @@ class Config:
             root_dir = Path(__file__).parent.parent.parent
             config_path = root_dir / 'config' / 'config.yaml'
             
+            # 读取原始文件内容以保留注释
+            with open(config_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+                
+            # 使用ruamel.yaml替代pyyaml以保留注释
+            yaml = YAML()
+            yaml.preserve_quotes = True
+            yaml.indent(mapping=2, sequence=4, offset=2)
+            
             with open(config_path, 'w', encoding='utf-8') as f:
-                yaml.dump(self.config_data, f, allow_unicode=True)
+                yaml.dump(self.config_data, f)
                 
         except Exception as e:
             error_msg = str(e).encode('utf-8', errors='ignore').decode('utf-8', errors='ignore')

@@ -12,3 +12,4 @@ replicate
 psutil
 fake_useragent
 APScheduler
+ruamel.yaml>=0.17.21

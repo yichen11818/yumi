@@ -18,63 +18,41 @@ class MessageHandler:
         self.command_handler = CommandHandler()
         self.verification_service = VerificationService()
         
-    def handle_message(self, data: Dict[str, Any]):
-        """处理消息的主入口"""
-        try:
-            message_type = data.get("message_type")
-            if message_type == "guild":
-                return self._handle_guild_message(data)
-                
-            sender = data.get("sender", {})
-            uid = sender.get("user_id")
-            gid = data.get("group_id")
-            message = data.get("message", [])
+    async def handle(self, data: Dict[str, Any]):
+        """处理消息"""
+        message_type = data.get('message_type')
+        
+        if message_type == 'group':
+            await self._handle_group_message(data)
+        elif message_type == 'private':
+            await self._handle_private_message(data)
             
-            # 记录消息
-            self.logger.info(f"Received message from {uid} in group {gid}: {message}")
+    async def _handle_group_message(self, data: Dict[str, Any]):
+        """处理群消息"""
+        gid = data.get('group_id')
+        uid = data.get('user_id')
+        message = data.get('message')
+        
+        # 处理@消息
+        if self._is_at_bot(message):
+            await self._handle_chat_message(gid, uid, message)
             
-            # 处理优先级:
-            # 1. 回复消息处理
-            if self._is_reply_message(message):
-                if self._handle_reply_message(message, gid, uid):
-                    return
-            
-            # 2. 验证答案检查
-            if gid and self._check_verification_answer(gid, uid, message):
-                return
-            
-            # 3. 命令处理
-            if self.command_handler.handle_command(self._extract_text(message), data):
-                return
-            
-            # 4. 检查是否在验证中
-            if gid and self.verification_service.is_pending_verification(gid, uid):
-                # 如果用户在验证中,不处理其他消息
-                return
-            
-            # 5. 最后才是GPT回复
-            if (self._is_at_bot(message) or 
-                "yumi" in self._extract_text(message).lower() or 
-                gid is None):
-                self._handle_chat_message(gid, uid, message)
-                
-        except Exception as e:
-            self.logger.error(f"Error handling message: {e}")
-            error_msg = [self.qq_service.text(f"处理消息时发生错误: {str(e)}")]
-            self.qq_service.send_message(gid, error_msg, uid)
-            
-    def _handle_chat_message(self, gid: Optional[int], uid: int, message: List[Dict[str, Any]]):
+    async def _handle_chat_message(self, gid: int, uid: int, message: List[Dict[str, Any]]):
         """处理聊天消息"""
-        # 提取纯文本内容
-        clean_message = self._extract_text(message)
-        session_id = f"G{gid}" if gid else f"P{uid}"
-        
-        # 获取回复
-        reply = self.chat_service.chat(session_id, clean_message)
-        
-        # 构造回复消息
-        reply_msg = [self.qq_service.text(reply)]
-        self.qq_service.send_message(gid, reply_msg, uid)
+        try:
+            # 提取纯文本消息
+            text = self._extract_text(message)
+            if not text:
+                return
+                
+            # 调用ChatGPT API
+            response = await self.chat_service.chat(f"group_{gid}_{uid}", text)
+            
+            # 发送回复
+            self.qq_service.send_message(gid, response, uid)
+            
+        except Exception as e:
+            self.logger.error(f"Error handling chat message: {e}")
         
     def _extract_text(self, message: List[Dict[str, Any]]) -> str:
         """从消息中提取纯文本内容"""
@@ -174,3 +152,23 @@ class MessageHandler:
         except Exception as e:
             self.logger.error(f"Error checking verification answer: {e}")
             return False
+
+    async def _handle_private_message(self, data: Dict[str, Any]):
+        """处理私聊消息"""
+        uid = data.get('user_id')
+        message = data.get('message')
+        
+        # 提取纯文本消息
+        text = self._extract_text(message)
+        if not text:
+            return
+        
+        try:
+            # 调用ChatGPT API
+            response = await self.chat_service.chat(f"private_{uid}", text)
+            
+            # 发送回复
+            self.qq_service.send_message(None, response, uid)
+            
+        except Exception as e:
+            self.logger.error(f"Error handling private message: {e}")

@@ -13,7 +13,7 @@ class NoticeHandler:
         self.qq_service = QQService()
         self.verification_service = VerificationService()
         
-    def handle_notice(self, data: Dict[str, Any]):
+    async def handle(self, data: Dict[str, Any]):
         """处理通知消息"""
         try:
             notice_type = data.get("notice_type")

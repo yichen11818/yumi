@@ -1,23 +1,41 @@
 # YuMi QQ Bot
 
-YuMi 是一个基于 Flask 的 QQ 机器人服务端框架,提供了丰富的功能和良好的扩展性。
+YuMi 是一个基于 Quart 的 QQ 机器人服务端框架，提供了丰富的功能和良好的扩展性。
 
 ## 主要功能
 
 - 消息处理与回复
+  - 群聊和私聊消息处理
+  - @消息自动回复
+  - ChatGPT 智能对话
+  - 多 API 端点支持
+  
 - 群组管理
-- 好友请求处理 
+  - 群成员管理
+  - 群消息撤回
+  - 群公告发布
+  
+- 好友请求处理
+  - 自动通过好友请求
+  - 验证消息处理
+  
 - 新闻资讯推送
-- ChatGPT 对话
-- 百度翻译集成
-- 音乐搜索与分享
-- 图片生成
-- 验证码验证
-- 定时任务调度
+  - CS2 游戏更新推送
+  - ChatGPT 更新日志推送
+  - 自动翻译推送内容
+  
+- AI 功能集成
+  - ChatGPT 对话
+  - 多 API 端点负载均衡
+  - 错误重试和故障转移
+  
+- 多语言支持
+  - 百度翻译集成
+  - 自动翻译外文内容
 
 ## 技术架构
 
-- 后端框架: Flask
+- 后端框架: Quart (异步 Web 框架)
 - 数据库: SQLite
 - 第三方服务:
   - OpenAI API (ChatGPT)
@@ -25,6 +43,66 @@ YuMi 是一个基于 Flask 的 QQ 机器人服务端框架,提供了丰富的功
   - Google Search API
   - Replicate API
 
+## 配置说明
+
+主要配置项包括:
+
+### QQ 机器人配置
+```
+qq_bot:
+  cqhttp_url: "http://127.0.0.1:8600" # cqhttp地址
+  bot_uid: "你的机器人QQ号" # 机器人QQ号
+  admin_qq: "管理员QQ号" # 管理员QQ号
+  host: "127.0.0.1" # 服务器地址
+  port: 5555 # 服务器端口
+  max_length: 4500 # 消息最大长度
+  auto_confirm: false # 是否自动确认好友请求
+  bot_name: "yumi" # 机器人昵称
+
+
+openai:
+  endpoints:
+    - url: "https://api.openai.com/v1"  # 官方API
+      api_key: "你的官方OpenAI API Key"
+      priority: 1
+    - url: "https://your-proxy1.com/v1"  # 代理1
+      api_key: "代理1的API Key"
+      priority: 2
+    - url: "https://your-proxy2.com/v1"  # 代理2
+      api_key: "代理2的API Key"
+      priority: 3
+  img_size: "1024x1024"
+
+chatgpt:
+  model: "gpt-3.5-turbo-0613" # 模型
+  max_tokens: 4000
+  preset: "你是一个智能助手..." # 预设
+  functions_enabled: true # 是否启用函数
+
+baidu:
+  appid: "你的百度翻译APPID" # 百度翻译APPID
+  secret_key: "你的百度翻译密钥" # 百度翻译密钥
+
+replicate:
+  api_token: "你的Replicate API Token" # Replicate API Token
+
+electricity:
+  api_url: "电费查询API地址" # 电费查询API地址
+  api_key: "电费查询API密钥" # 电费查询API密钥
+
+news:
+  gid:
+    cs2: "CS2新闻推送群号,多个群用逗号分隔" # CS2新闻推送群号,多个群用逗号分隔
+    gpt: "GPT新闻推送群号,多个群用逗号分隔" # GPT新闻推送群号,多个群用逗号分隔
+
+database:
+  path: "data/bot.db" # 数据库路径
+
+google:
+  api_key: "你的Google API密钥" # Google API密钥
+  cx_id: "你的自定义搜索引擎ID" # 自定义搜索引擎ID
+  serper_api_key: "your Serper API密钥" # Serper API密钥
+```
 ## 项目结构
 ```
 src/
@@ -46,9 +124,10 @@ src/
 ## 快速开始
 
 1. 安装依赖:
+```
 bash
 pip install -r requirements.txt
-
+```
 2. 配置文件:
 - 复制 `config/config.yaml.example` 为 `config/config.yaml`
 - 填写必要的配置项:
@@ -59,22 +138,10 @@ pip install -r requirements.txt
 
 3. 启动服务:
 bash
+```
 python src/main.py
 
-
-## 配置说明
-
-主要配置项包括:
-
-- qq_bot: QQ 机器人相关配置
-- openai: OpenAI API 配置
-- chatgpt: ChatGPT 模型配置
-- baidu: 百度翻译 API 配置
-- news: 新闻推送群组配置
-- database: 数据库配置
-
-详细配置说明请参考 `config/config.yaml.example`
-
+```
 ## 功能扩展
 
 1. 添加新的消息处理器:
