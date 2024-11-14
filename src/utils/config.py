@@ -96,4 +96,32 @@ class Config:
             if field not in self.config_data['qq_bot']:
                 raise ValueError(f"qq_bot 配置缺少必要字段: {field}")
                 
+        # 验证base_urls配置
+        if 'base_urls' not in self.config_data['openai']:
+            raise ValueError("openai配置缺少base_urls字段")
+        
+        base_urls = self.config_data['openai']['base_urls']
+        if not isinstance(base_urls, list) or len(base_urls) == 0:
+            raise ValueError("base_urls必须是非空列表")
+        
+        for url_config in base_urls:
+            if 'url' not in url_config or 'priority' not in url_config:
+                raise ValueError("每个base_url配置必须包含url和priority字段")
+                
         return True
+    
+    def update_bot_info(self, uid: str, name: str):
+        """更新机器人信息到配置文件"""
+        try:
+            self.config_data['qq_bot']['bot_uid'] = str(uid)
+            self.config_data['qq_bot']['bot_name'] = name
+            
+            root_dir = Path(__file__).parent.parent.parent
+            config_path = root_dir / 'config' / 'config.yaml'
+            
+            with open(config_path, 'w', encoding='utf-8') as f:
+                yaml.dump(self.config_data, f, allow_unicode=True)
+                
+        except Exception as e:
+            error_msg = str(e).encode('utf-8', errors='ignore').decode('utf-8', errors='ignore')
+            raise Exception(f"更新配置文件失败: {error_msg}")

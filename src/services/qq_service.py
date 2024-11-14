@@ -197,3 +197,18 @@ class QQService:
         except Exception as e:
             self.logger.error(f"Error deleting message: {e}")
             return False
+
+    def get_login_info(self) -> Optional[Dict[str, Any]]:
+        """获取登录号信息"""
+        try:
+            response = self.session.get(f"{self.base_url}/get_login_info")
+            response.raise_for_status()
+            result = response.json()
+            
+            if result['status'] == 'ok':
+                return result['data']
+            return None
+            
+        except Exception as e:
+            self.logger.error(f"获取登录信息失败: {e}")
+            return None
