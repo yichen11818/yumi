@@ -96,17 +96,17 @@ class Config:
             if field not in self.config_data['qq_bot']:
                 raise ValueError(f"qq_bot 配置缺少必要字段: {field}")
                 
-        # 验证base_urls配置
-        if 'base_urls' not in self.config_data['openai']:
-            raise ValueError("openai配置缺少base_urls字段")
+        # 验证endpoints配置
+        if 'endpoints' not in self.config_data['openai']:
+            raise ValueError("openai配置缺少endpoints字段")
         
-        base_urls = self.config_data['openai']['base_urls']
-        if not isinstance(base_urls, list) or len(base_urls) == 0:
-            raise ValueError("base_urls必须是非空列表")
+        endpoints = self.config_data['openai']['endpoints']
+        if not isinstance(endpoints, list) or len(endpoints) == 0:
+            raise ValueError("endpoints必须是非空列表")
         
-        for url_config in base_urls:
-            if 'url' not in url_config or 'priority' not in url_config:
-                raise ValueError("每个base_url配置必须包含url和priority字段")
+        for endpoint in endpoints:
+            if not all(k in endpoint for k in ['url', 'api_key', 'priority']):
+                raise ValueError("每个endpoint配置必须包含url、api_key和priority字段")
                 
         return True
     

@@ -10,7 +10,14 @@ class ImageService:
     def __init__(self):
         self.config = Config()
         self.logger = Logger()
-        self.client = OpenAI(api_key=self.config.openai['api_key'][0])
+        self.endpoint = sorted(
+            self.config.openai['endpoints'],
+            key=lambda x: x['priority']
+        )[0]
+        self.client = OpenAI(
+            api_key=self.endpoint['api_key'],
+            base_url=self.endpoint['url']
+        )
         
     def generate_openai_image(self, prompt: str) -> Optional[str]:
         """使用OpenAI生成图片"""

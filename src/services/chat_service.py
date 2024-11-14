@@ -13,41 +13,39 @@ class ChatService:
     def __init__(self):
         self.config = Config()
         self.logger = Logger()
-        self.current_key_index = 0
-        self.current_url_index = 0
+        self.current_endpoint_index = 0
         self.client = self._create_client()
         self.sessions = {}
         
     def _create_client(self) -> OpenAI:
         """创建OpenAI客户端"""
         try:
-            api_key = self._get_current_api_key()
-            base_url = self._get_current_base_url()
-            
+            endpoint = self._get_current_endpoint()
             return OpenAI(
-                api_key=api_key,
-                base_url=base_url,
+                api_key=endpoint['api_key'],
+                base_url=endpoint['url'],
                 timeout=30.0
             )
         except Exception as e:
             self.logger.error(f"创建OpenAI客户端失败: {e}")
             return None
             
-    def _get_current_base_url(self) -> str:
-        """获取当前base_url"""
-        base_urls = sorted(
-            self.config.openai['base_urls'],
+    def _get_current_endpoint(self) -> Dict[str, Any]:
+        """获取当前endpoint配置"""
+        endpoints = sorted(
+            self.config.openai['endpoints'],
             key=lambda x: x['priority']
         )
-        return base_urls[self.current_url_index]['url']
+        return endpoints[self.current_endpoint_index]
         
-    def _switch_base_url(self) -> bool:
-        """切换到下一个base_url"""
-        base_urls = self.config.openai['base_urls']
-        if self.current_url_index < len(base_urls) - 1:
-            self.current_url_index += 1
+    def _switch_endpoint(self) -> bool:
+        """切换到下一个endpoint"""
+        endpoints = self.config.openai['endpoints']
+        if self.current_endpoint_index < len(endpoints) - 1:
+            self.current_endpoint_index += 1
             self.client = self._create_client()
-            self.logger.info(f"切换到备用API地址: {self._get_current_base_url()}")
+            current = self._get_current_endpoint()
+            self.logger.info(f"切换到备用API地址: {current['url']}")
             return True
         return False
         
@@ -57,7 +55,7 @@ class ChatService:
         self.logger.error(f"API调用失败: {error_msg}")
         
         if "connect" in error_msg.lower() or "timeout" in error_msg.lower():
-            if self._switch_base_url():
+            if self._switch_endpoint():
                 return "API连接失败,已切换到备用地址,请重试"
             else:
                 return "所有API地址均不可用,请稍后再试"
