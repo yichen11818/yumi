@@ -1,44 +1,54 @@
 qq_bot:
-  cqhttp_url: http://127.0.0.1:8600
-  bot_uid: '1877200940'
-  admin_qq: '1181806270'
-  host: 127.0.0.1
-  port: 5555
-  max_length: 4500
-  auto_confirm: false
-  bot_name: yumi二号机
+  cqhttp_url: "http://127.0.0.1:8600" # cqhttp地址
+  bot_uid: "你的机器人QQ号" # 机器人QQ号
+  admin_qq: "管理员QQ号" # 管理员QQ号
+  host: "127.0.0.1" # 服务器地址
+  port: 5555 # 服务器端口
+  max_length: 4500 # 消息最大长度
+  auto_confirm: false # 是否自动确认好友请求
+  bot_name: "yumi" # 机器人昵称
+
+
 openai:
   endpoints:
-    - api_key: '1'
+    - url: "https://api.openai.com/v1"  # 官方API
+      api_key: "你的官方OpenAI API Key"
       priority: 1
-      url: https://free.oneai.buzz/v1
-    - api_key: '1'
+    - url: "https://your-proxy1.com/v1"  # 代理1
+      api_key: "代理1的API Key"
       priority: 2
-      url: https://free.zeroai.chat/v1
-    - api_key: sk-LI5WPEH3R6cZZGEz00E504C747D34a408574E5B3F87fBf03
+    - url: "https://your-proxy2.com/v1"  # 代理2
+      api_key: "代理2的API Key"
       priority: 3
-      url: https://ai.zeroai.one/v1
-  img_size: 1024x1024
+  img_size: "1024x1024"
+
 chatgpt:
-  model: gpt-4o
+  model: "gpt-3.5-turbo-0613" # 模型
   max_tokens: 4000
-  preset: 你是一个智能助手...
-  functions_enabled: true
+  preset: "你是一个智能助手..." # 预设
+  functions_enabled: true # 是否启用函数
+
 baidu:
-  appid: 你的百度翻译APPID
-  secret_key: 你的百度翻译密钥
+  appid: "你的百度翻译APPID" # 百度翻译APPID
+  secret_key: "你的百度翻译密钥" # 百度翻译密钥
+
 replicate:
-  api_token: 你的Replicate API Token
+  api_token: "你的Replicate API Token" # Replicate API Token
+
 electricity:
-  api_url: 电费查询API地址
-  api_key: 电费查询API密钥
+  api_url: "电费查询API地址" # 电费查询API地址
+  api_key: "电费查询API密钥" # 电费查询API密钥
+
 news:
   gid:
-    cs2: CS2新闻推送群号,多个群用逗号分隔
-    gpt: GPT新闻推送群号,多个群用逗号分隔
+    cs2: "CS2新闻推送群号,多个群用逗号分隔" # CS2新闻推送群号,多个群用逗号分隔
+    gpt: "GPT新闻推送群号,多个群用逗号分隔" # GPT新闻推送群号,多个群用逗号分隔
+
+
 database:
-  path: data/bot.db
+  path: "data/bot.db" # 数据库路径
+
 google:
-  api_key: 你的Google API密钥
-  cx_id: 你的自定义搜索引擎ID
-  serper_api_key: 你的Serper API密钥
+  api_key: "你的Google API密钥" # Google API密钥
+  cx_id: "你的自定义搜索引擎ID" # 自定义搜索引擎ID
+  serper_api_key: "你的Serper API密钥" # Serper API密钥
